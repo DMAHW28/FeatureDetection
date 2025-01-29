@@ -1,0 +1,3 @@
+/Users/liamdro/PycharmProjects/FeatureDetection/cmake-build-debug/CMakeFiles/FeatureDetection.dir
+/Users/liamdro/PycharmProjects/FeatureDetection/cmake-build-debug/CMakeFiles/edit_cache.dir
+/Users/liamdro/PycharmProjects/FeatureDetection/cmake-build-debug/CMakeFiles/rebuild_cache.dir
