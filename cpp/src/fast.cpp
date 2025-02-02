@@ -9,7 +9,7 @@
 using namespace std;
 using namespace cornersD;
 
-cv::Mat Fast::fast_detector_score(const string& image_file, int n, int threshold, bool rotate, float angle){
+cv::Mat Fast::fast_detector_score(const string& image_file, int n, int threshold){
     /*
     Compute the Fast corner score for the image.
 
@@ -17,8 +17,6 @@ cv::Mat Fast::fast_detector_score(const string& image_file, int n, int threshold
     - image_file: Path to the image file.
     - n: Number of contiguous pixels.
     - threshold: threshold value.
-    - rotate: Boolean flag to indicate if the image should be rotated.
-    - angle: Rotation angle in degrees.
 
     Returns:
     - C: Fast score matrix.
@@ -26,16 +24,11 @@ cv::Mat Fast::fast_detector_score(const string& image_file, int n, int threshold
 
     // Read the image
     cv::Mat image = cv::imread(image_file, cv::IMREAD_GRAYSCALE);
-
     // Check if the image was loaded successfully
     if (image.empty()) {
         throw invalid_argument("Error: Could not open or find the image " + image_file);
     }
 
-    // Rotate the image if requested
-    if (rotate) {
-        image = rotate_image(image, angle);
-    }
     // List of positions of pixels in circle of radius 3 around current pixels
     vector<pair<int, int>> circle_pixels = {
             {0, 3}, {1, 3}, {2, 2}, {3, 1},
@@ -61,7 +54,7 @@ cv::Mat Fast::fast_detector_score(const string& image_file, int n, int threshold
                 }
             }
             // Test if pixel is a corner using threshold_ver and add pixel score
-            tuple<bool, float> thresholdVer_r = threshold_ver(circle_intensities, Ip, n);
+            tuple<bool, float> thresholdVer_r = threshold_ver(circle_intensities, Ip, threshold, n);
             if (get<0>(thresholdVer_r)){
                 C.at<float>(y, x) = get<1>(thresholdVer_r);
             }
@@ -70,16 +63,13 @@ cv::Mat Fast::fast_detector_score(const string& image_file, int n, int threshold
     return C;
 }
 
-tuple<cv::Mat, int, vector<cv::Point>> Fast::fast_detector_image(const string& image_file, const cv::Mat& corners, bool rotate, float angle, float r){
+tuple<cv::Mat, int, vector<cv::Point>> Fast::fast_detector_image(const string& image_file, const cv::Mat& corners){
     /*
     Display detected corners using the FAST detector on the input image.
 
     Parameters:
     - image_file: Path to the image file (the image to process).
     - corners: Harris detected corners (binary matrix with 1.0 for corners).
-    - r: Radius of the circles drawn around detected corners.
-    - rotate: Boolean flag to indicate if the image should be rotated.
-    - angle: Rotation angle in degrees.
 
     Returns:
     - harris_image: Image with detected corners marked.
@@ -88,10 +78,6 @@ tuple<cv::Mat, int, vector<cv::Point>> Fast::fast_detector_image(const string& i
     */
     //  Read the image
     cv::Mat harris_image = cv::imread(image_file);
-    //  Rotate the image if requested
-    if (rotate){
-        harris_image = rotate_image(harris_image, angle);
-    }
 
     // Apply detected points on image and count the number of points detected
     cv::Scalar color(0, 0, 255);
@@ -103,13 +89,13 @@ tuple<cv::Mat, int, vector<cv::Point>> Fast::fast_detector_image(const string& i
                 cv::Point p(j, i);
                 points.push_back(p);
                 ++corner_number;
-                cv::circle(harris_image, p, r, color, -1);
+                cv::circle(harris_image, p, 2, color, -1);
             }
         }
     }
     return make_tuple(harris_image, corner_number, points);
 }
-tuple<cv::Mat, int, vector<cv::Point>> Fast::compute_fast_detector(const string& image_file, int n, int threshold, bool nms, int nms_window, bool rotate, float angle, float r){
+tuple<cv::Mat, int, vector<cv::Point>> Fast::compute_fast_detector(const string& image_file, int n, int threshold, bool nms, int nms_window){
     /*
     Computes the FAST corner detector with optional non-maxima suppression.
 
@@ -119,9 +105,6 @@ tuple<cv::Mat, int, vector<cv::Point>> Fast::compute_fast_detector(const string&
     - threshold: threshold value.
     - nms: Boolean flag to apply non-maxima suppression.
     - nms_window: Size of the window for non-maxima suppression.
-    - rotate: Boolean flag to indicate if the image should be rotated.
-    - angle: Rotation angle in degrees.
-    - r: Radius of the circles drawn around detected corners.
 
     Returns:
     - harris_image: Image with detected corners marked.
@@ -129,12 +112,11 @@ tuple<cv::Mat, int, vector<cv::Point>> Fast::compute_fast_detector(const string&
     - points: List of detected corner points.
     */
     // Compute the Fast corner score.
-    cv::Mat score = fast_detector_score(image_file, n, threshold, rotate, angle);
+    cv::Mat score = fast_detector_score(image_file, n, threshold);
     // Apply nms if requested
     if (nms){
         score = non_maxima_suppression(score, nms_window);
     }
-
     // Estimate corners
     cv::Mat corners = cv::Mat::zeros(score.rows, score.cols, CV_32F);
     for (int i=0; i<score.rows; ++i){
@@ -144,7 +126,7 @@ tuple<cv::Mat, int, vector<cv::Point>> Fast::compute_fast_detector(const string&
             }
         }
     }
-    return fast_detector_image(image_file,  corners, rotate, angle, r);
+    return fast_detector_image(image_file,  corners);
 }
 
 tuple<bool, float> Fast::threshold_ver(const vector<uchar>& circle, float Ip, int threshold, int n) {
@@ -181,11 +163,11 @@ tuple<bool, float> Fast::threshold_ver(const vector<uchar>& circle, float Ip, in
 
     cv::Mat conv_result;
     cv::filter2D(bv, conv_result, -1, filter_n, cv::Point(-1, -1), 0, cv::BORDER_CONSTANT);
-
+    int cut = (n - 1) / 2;
+    cv::Mat conv_valid = conv_result.colRange(cut, bv.cols - cut);
     // Estimate corners based on the convolution maximum value
     double max_conv;
-    cv::minMaxLoc(conv_result, nullptr, &max_conv);
-
+    cv::minMaxLoc(conv_valid, nullptr, &max_conv);
     if (max_conv >= n) {
         // Estimate the score
         cv::Mat_<float> diff;

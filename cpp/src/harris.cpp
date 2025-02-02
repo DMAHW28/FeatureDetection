@@ -9,7 +9,7 @@
 #include "corners.hpp"
 using namespace std;
 using namespace cornersD;
-cv::Mat Harris::harris_detector_score(const string& image_file, const string& window_type, int window_size, float k, float sigma, bool rotate, float angle) {
+cv::Mat Harris::harris_detector_score(const string& image_file, const string& window_type, int window_size, float k, float sigma) {
     /*
     Compute the Harris corner score for the image.
 
@@ -19,8 +19,6 @@ cv::Mat Harris::harris_detector_score(const string& image_file, const string& wi
     - window_size: Size of the filter kernel.
     - k: Harris criterion constant.
     - sigma: Standard deviation of the Gaussian filter.
-    - rotate: Boolean flag to indicate if the image should be rotated.
-    - angle: Rotation angle in degrees.
 
     Returns:
     - C: Harris score matrix.
@@ -33,16 +31,9 @@ cv::Mat Harris::harris_detector_score(const string& image_file, const string& wi
     if (image.empty()) {
         const string error_msg = "Error: Could not open or find the image " + image_file;
         throw invalid_argument(error_msg);
-        // cerr << "Error: Could not open or find the image!" << endl;
-        // return cv::Mat();  // return an empty matrix in case of error
     }
 
     cv::Size kernel_size = cv::Size(window_size, window_size);
-
-    // Rotate the image if requested
-    if (rotate) {
-        image = rotate_image(image, angle);
-    }
 
     // Compute the gradients (Ix, Iy)
     pair<cv::Mat, cv::Mat> gradients = compute_gradient(image);
@@ -67,8 +58,6 @@ cv::Mat Harris::harris_detector_score(const string& image_file, const string& wi
     }
     else {
         throw invalid_argument("Invalid window type: Choose 'Rectangular' or 'Gaussian'.");
-        // cerr << "Error: Invalid window type. Choose 'Rectangular' or 'Gaussian'." << endl;
-        // return cv::Mat();  // Return empty matrix in case of invalid window type
     }
 
     // Compute the Harris corner response matrix
@@ -77,16 +66,13 @@ cv::Mat Harris::harris_detector_score(const string& image_file, const string& wi
     cv::Mat C = det_M - k * trace_M.mul(trace_M);
     return C;
 }
-tuple<cv::Mat, int, vector<cv::Point>> Harris::harris_detector_image(const string& image_file, const cv::Mat& corners, bool rotate, float angle, float r){
+tuple<cv::Mat, int, vector<cv::Point>> Harris::harris_detector_image(const string& image_file, const cv::Mat& corners){
     /*
     Display detected corners using the Harris detector on the input image.
 
     Parameters:
     - image_file: Path to the image file (the image to process).
     - corners: Harris detected corners (binary matrix with 1.0 for corners).
-    - r: Radius of the circles drawn around detected corners.
-    - rotate: Boolean flag to indicate if the image should be rotated.
-    - angle: Rotation angle in degrees.
 
     Returns:
     - harris_image: Image with detected corners marked.
@@ -97,10 +83,6 @@ tuple<cv::Mat, int, vector<cv::Point>> Harris::harris_detector_image(const strin
     //  Read the image
     cv::Mat harris_image = cv::imread(image_file);
 
-    //  Rotate the image if requested
-    if (rotate){
-        harris_image = rotate_image(harris_image, angle);
-    }
     // Apply detected points on image and count the number of points detected
     cv::Scalar color(0, 0, 255);
     int corner_number = 0;
@@ -112,13 +94,13 @@ tuple<cv::Mat, int, vector<cv::Point>> Harris::harris_detector_image(const strin
                 points.push_back(p);
                 ++corner_number;
                 // Draw red circles on detected corners
-                cv::circle(harris_image, p, r, color, -1);
+                cv::circle(harris_image, p, 2, color, -1);
             }
         }
     }
     return make_tuple(harris_image, corner_number, points);
 }
-tuple<cv::Mat, int, vector<cv::Point>> Harris::compute_harris_detector(const string& image_file, const string& window_type, int window_size, float k, float sigma, bool nms, int nms_window, bool rotate, float angle, float r, float threshold){
+tuple<cv::Mat, int, vector<cv::Point>> Harris::compute_harris_detector(const string& image_file, const string& window_type, int window_size, float k, float sigma, bool nms, int nms_window, float threshold){
     /*
     Computes the Harris corner detector with optional non-maxima suppression.
 
@@ -129,8 +111,6 @@ tuple<cv::Mat, int, vector<cv::Point>> Harris::compute_harris_detector(const str
     - k: Harris criterion constant.
     - nms: Boolean flag to apply non-maxima suppression.
     - sigma: Standard deviation of the Gaussian filter.
-    - rotate: Boolean flag to indicate if the image should be rotated.
-    - angle: Rotation angle in degrees.
     - threshold: Threshold for corner detection based on Harris score.
     - nms_window: Size of the window for non-maxima suppression.
 
@@ -141,7 +121,7 @@ tuple<cv::Mat, int, vector<cv::Point>> Harris::compute_harris_detector(const str
     */
 
     // Compute the Harris corner score.
-    cv::Mat score = harris_detector_score(image_file, window_type, window_size, k, sigma, rotate, angle);
+    cv::Mat score = harris_detector_score(image_file, window_type, window_size, k, sigma);
 
     // Apply nms if requested
     if (nms){
@@ -160,6 +140,6 @@ tuple<cv::Mat, int, vector<cv::Point>> Harris::compute_harris_detector(const str
             }
         }
     }
-    return harris_detector_image(image_file,  corners, rotate, angle, r);
+    return harris_detector_image(image_file,  corners);
 }
 

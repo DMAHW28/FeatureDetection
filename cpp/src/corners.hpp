@@ -9,28 +9,6 @@
 #include <tuple>
 using namespace std;
 namespace cornersD {
-    inline cv::Mat rotate_image(const cv::Mat& image, float angle = 30){
-        /*
-        Rotates the input image by a specified angle.
-
-        Parameters:
-        - image: Input image to be rotated.
-        - angle: Rotation angle in degrees (default is 30).
-
-        Returns:
-        - rotated: The rotated image.
-        */
-        // Output image and size of the image
-        cv::Mat rotated;
-        int h = image.rows;
-        int w = image.cols;
-        // Define the center of rotation, get the rotation matrix, and apply the rotation
-        cv::Point2f center(w / 2.0f, h / 2.0f);
-        cv::Mat M = cv::getRotationMatrix2D(center, angle, 1.0);
-        cv::warpAffine(image, rotated, M, cv::Size(w, h));
-        return rotated;
-    }
-
     inline cv::Mat non_maxima_suppression(const cv::Mat& score, int window_size = 7){
         /*
         Apply non-maxima suppression to the given score matrix.
@@ -143,9 +121,9 @@ namespace cornersD {
         - harris_detector_image: Display detected corners using the Harris detector on the input image.
         - compute_harris_detector: Computes the Harris corner detector with optional non-maxima suppression.
         */
-        cv::Mat harris_detector_score(const string& image_file, const string& window_type="Gaussian", int window_size=3, float k=0.055, float sigma=1, bool rotate=false, float angle=30);
-        tuple<cv::Mat, int, vector<cv::Point>> harris_detector_image(const string& image_file, const cv::Mat& corners, bool rotate = false, float angle = 30.0, float r = 2);
-        tuple<cv::Mat, int, vector<cv::Point>> compute_harris_detector(const string& image_file, const string& window_type="Gaussian", int window_size=3, float k=0.055, float sigma = 1, bool nms = true, int nms_window = 5, bool rotate = false, float angle = 30, float r = 2, float threshold = 0.01);
+        cv::Mat harris_detector_score(const string& image_file, const string& window_type="Gaussian", int window_size=3, float k=0.055, float sigma=1);
+        tuple<cv::Mat, int, vector<cv::Point>> harris_detector_image(const string& image_file, const cv::Mat& corners);
+        tuple<cv::Mat, int, vector<cv::Point>> compute_harris_detector(const string& image_file, const string& window_type="Gaussian", int window_size=3, float k=0.055, float sigma = 1, bool nms = true, int nms_window = 5, float threshold = 0.01);
     };
 
     class Fast {
@@ -159,9 +137,9 @@ namespace cornersD {
         - compute_fast_detector: Computes the FAST corner detector with optional parameters for the threshold and rotation.
         - threshold_ver: Verifies the threshold condition for the FAST detector's corner detection.
         */
-        cv::Mat fast_detector_score(const string& image_file, int n=12, int threshold = 20, bool rotate=false, float angle=30);
-        tuple<cv::Mat, int, vector<cv::Point>> fast_detector_image(const string& image_file, const cv::Mat& corners, bool rotate = false, float angle = 30.0, float r = 2);
-        tuple<cv::Mat, int, vector<cv::Point>> compute_fast_detector(const string& image_file, int n=12, int threshold = 20, bool nms = true, int nms_window = 5, bool rotate = false, float angle = 30, float r = 2);
+        cv::Mat fast_detector_score(const string& image_file, int n=12, int threshold = 20);
+        tuple<cv::Mat, int, vector<cv::Point>> fast_detector_image(const string& image_file, const cv::Mat& corners);
+        tuple<cv::Mat, int, vector<cv::Point>> compute_fast_detector(const string& image_file, int n=12, int threshold = 20, bool nms = true, int nms_window = 7);
         tuple<bool, float> threshold_ver(const vector<uchar>& circle, float Ip, int threshold = 20, int n = 12);
     };
 };
