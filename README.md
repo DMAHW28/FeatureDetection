@@ -76,7 +76,7 @@ Here are some example Harris Corner Detection results:
 ### 🔹 FAST Corner Detection
 Here are some example 🔹 FAST Corner Detection results:
 
-![Sample Predictions](docs/Fast_1_cpp.png)
+![Sample Predictions](docs/fast_1_cpp.png)
 
 ### 🔹 LBP Feature Matching
 Here’s an example of feature matching using the LBP descriptor:
