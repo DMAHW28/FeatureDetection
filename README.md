@@ -23,7 +23,7 @@ cpp/                   # C++ implementation
        main.cpp           # C++ entry point for testing the algorithms
 python/                # Python implementation
    notebooks/             
-       test.ipynb         # upyter notebook for testing the Python implementation
+       main.ipynb         # upyter notebook for testing the Python implementation
    src/                   
        descriptors.py     # Descriptors extraction and matching algorithm implementation
        fast.py            # Fast corner detection implementation
@@ -48,7 +48,7 @@ pip install -r requirements.txt
 
 2. Open and run the Jupyter notebook:
 ```bash
-jupyter notebook test.ipynb
+jupyter notebook python/notebooks/main.ipynb
 ```
 ###  C++ Compilation & Execution
 1. Navigate to the cmake-build-debug folder:
