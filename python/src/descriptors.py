@@ -216,6 +216,8 @@ def display_patches(image, keypoints, window_size, num_patches=5):
 
 ############################################################ LBP ###################################################################
 
+__author__ = "EMADALY Khouzema"
+__email__ = "khozemaemadaly360@gmail.com"
 
 """on doit calculer le Local Binary Pattern (LBP) pour un pixel donné. Cette fonction va nous servir à extraire une signature locale qui encode la texture autour d'un pixel central."""
 

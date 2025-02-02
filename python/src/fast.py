@@ -1,3 +1,6 @@
+__author__ = "EMADALY Khouzema"
+__email__ = "khozemaemadaly360@gmail.com"
+
 import numpy as np
 from skimage.color import rgb2gray
 
